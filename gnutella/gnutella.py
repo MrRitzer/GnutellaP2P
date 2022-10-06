@@ -6,14 +6,13 @@ from gnutella.host import Host
 
 class Peer:
     def __init__(self,port):
-        peer = ('0.0.0.0',port)
-        self.knownPeers = self.__getPeers(Host(peer[0],str(peer[1])))
+        self.knownPeers = self.__getPeers(Host('127.0.0.1',str(port)))
         self.connections = []
         self.keywords = []
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.sock.bind(peer)
+        self.sock.bind(('0.0.0.0',port))
         
         pingThread = threading.Thread(target=self.Ping)
         pingThread.daemon = True
@@ -23,14 +22,9 @@ class Peer:
     def Ping(self):
         print("Started pinging")
         for peer in self.knownPeers:
-            try:
-                self.sock.connect(peer)
-                self.sock.send(bytes(self.__getKey() + '&00&2','utf-8'))
-                time.sleep(1)
-                data = self.sock.recv(1024)
-                self.__handleMessage(data)
-            except:
-                pass
+            cThread = threading.Thread(target=self.__handshake, args = (peer,))
+            cThread.daemon = True
+            cThread.start()
         print("Completed pinging")
 
     def Pong(self):
@@ -55,6 +49,16 @@ class Peer:
     
     def QueryHit(self):
         pass
+
+    def __handshake(self,peer):
+        try:
+            # self.sock.connect_ex(peer)
+            self.sock.sendto(bytes(self.__getKey() + '&00&2','utf-8'),peer)
+            while True:
+                data = self.sock.recv(1024)
+                self.__handleMessage(data)
+        except:
+            pass
 
     def __handleMessage(self,msg):
         print(str(msg,'utf-8'))
