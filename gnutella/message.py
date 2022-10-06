@@ -77,3 +77,20 @@ class Message:
         pong += pong_payload   
         
         return pong
+
+    @staticmethod
+    def constructPing(ttl,hops):
+        ping_payload = Message.__number_to_bytes(address[1], 2)
+        # then the IP
+        IP = [int(i) for i in address[0].split(".")]
+        ping_payload += bytes(IP)
+        # and the shared files and data
+        ping_payload += Message.__number_to_bytes(keywords, 4)
+        # we use no GGEP extension, so we’re finished with building the pong payload.
+
+        # now we have the payload length, so we can get it and use it to create the header. 
+        ping_payload_length = len(ping_payload)
+        ping = Message.__construct_header(None, "pong", ttl, hops, ping_payload_length)
+        ping += ping_payload   
+        
+        return ping
