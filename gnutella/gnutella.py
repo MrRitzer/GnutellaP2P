@@ -12,11 +12,11 @@ class Peer:
         self.keywords = []
 
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.client.setclientpt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.client.bind(('0.0.0.0',port))
 
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server.setserveropt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.server.bind(('0.0.0.0'))
         
         pingThread = threading.Thread(target=self.Ping)
