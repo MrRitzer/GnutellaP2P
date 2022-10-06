@@ -4,9 +4,6 @@ import selectors
 import types
 import json
 
-sel = selectors.DefaultSelector()
-messages = [b"Message 1 from client.", b"Message 2 from client."]
-
 def start_connections(peers):
     for i in range(0, len(peers)):
         connid = i + 1
@@ -14,15 +11,16 @@ def start_connections(peers):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setblocking(False)
         sock.connect_ex(peers[i])
-        events = selectors.EVENT_READ | selectors.EVENT_WRITE
-        data = types.SimpleNamespace(
-            connid=connid,
-            msg_total=sum(len(m) for m in messages),
-            recv_total=0,
-            messages=messages.copy(),
-            outb=b"",
-        )
-        sel.register(sock, events, data=data)
+        while True:
+            try:
+                sock.send(bytes('Test', 'utf-8'))
+                data = sock.recv(1024)
+                if not data:
+                    break
+                else:
+                    print(data)
+            except:
+                pass
 
 def getPeers() -> list:
         peersTuple = []
