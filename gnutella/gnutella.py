@@ -1,5 +1,6 @@
 import json
 import socket
+import socketserver
 import threading
 import time
 from gnutella.host import Host
@@ -10,9 +11,13 @@ class Peer:
         self.connections = []
         self.keywords = []
 
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.sock.bind(('0.0.0.0',port))
+        self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.client.setclientpt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.client.bind(('0.0.0.0',port))
+
+        self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server.setserveropt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.server.bind(('0.0.0.0'))
         
         pingThread = threading.Thread(target=self.Ping)
         pingThread.daemon = True
@@ -28,9 +33,9 @@ class Peer:
         print("Completed pinging")
 
     def Pong(self):
-        self.sock.listen(1)
+        self.client.listen(1)
         while True:
-            c, a = self.sock.accept()
+            c, a = self.client.accept()
             cThread = threading.Thread(target=self.__PongHandler, args = (c,))
             cThread.daemon = True
             cThread.start()
@@ -52,10 +57,10 @@ class Peer:
 
     def __handshake(self,peer):
         try:
-            # self.sock.connect_ex(peer)
-            self.sock.sendto(bytes(self.__getKey() + '&00&2','utf-8'),peer)
+            # self.client.connect_ex(peer)
+            self.client.sendto(bytes(self.__getKey() + '&00&2','utf-8'),peer)
             while True:
-                data = self.sock.recv(1024)
+                data = self.client.recv(1024)
                 self.__handleMessage(data)
         except:
             pass
